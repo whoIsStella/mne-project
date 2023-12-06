@@ -1,0 +1,50 @@
+from sklearn.impute import SimpleImputer
+import pandas as pd
+import numpy as np
+
+# Load the data
+df = pd.read_csv(r'C:\Users\hallo\OneDrive\Documents\mindMonitor_2023-10-31-updated.csv')
+
+# Display initial DataFrame state
+print("Initial DataFrame:")
+print(df.head())
+
+# Display rows with negative values (if any)
+print("\nRows with Negative Values (if any):")
+print(df[df.select_dtypes(include=[np.number]) < 0].head())
+
+# Display information about NaN values
+print("\nNaN values in DataFrame:")
+print(df.isna().sum())
+
+# Replace negative values with their absolute values in numeric columns
+numeric_cols = df.select_dtypes(include=[np.number]).columns
+df[numeric_cols] = df[numeric_cols].apply(np.abs)
+
+# Fill columns with all NaN values with 0
+all_nan_columns = df.columns[df.isna().all()]
+df[all_nan_columns] = df[all_nan_columns].fillna(0)
+
+# Apply imputation to numeric columns only
+imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
+df_imputed = pd.DataFrame(imputer.fit_transform(df[numeric_cols]), columns=numeric_cols)
+
+# Combine imputed numeric data with non-numeric data
+non_numeric_cols = df.select_dtypes(exclude=[np.number]).columns
+df_final = pd.concat([df_imputed, df[non_numeric_cols]], axis=1)
+
+# Display transformed DataFrame state
+print("\nTransformed DataFrame:")
+print(df_final.head())
+
+# Check for negative values after transformation
+negative_values_exist = (df_final[df_final.select_dtypes(include=[np.number]) < 0].any()).any()
+print("\nAre there any negative values left? ", "Yes" if negative_values_exist else "No")
+
+# Display information about NaN values after transformation
+print("\nNaN values after transformations and imputation:")
+print(df_final.isna().sum())
+
+# Save the transformed DataFrame to a new CSV file
+df_final.to_csv(r'C:\Users\hallo\OneDrive\Documents\mindMonitor_2023-10-31-amended.csv', index=False)
+print("\nAmended data saved to 'mindMonitor_2023-10-31-amended.csv'")
