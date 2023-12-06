@@ -1,0 +1,56 @@
+#this must be in a jupiter notebook to work correctly
+import matplotlib
+import pathlib
+# %%
+import mne
+
+matplotlib.use('Qt5Agg') #run this in it's own cell for the graphing to work
+
+sample_data_dir = mne.datasets.sample.data_path()
+#convert to pathlib.Path
+sample_data_dir = pathlib.Path(sample_data_dir)
+sample_data_dir
+# PosinPath('C:\Users\hallo\mne_data\MNE-sample-data')
+
+raw_path = sample_data_dir / 'MEG' / 'sample' / 'sample_audvis_raw.fif'
+raw = mne.io.read_raw_fif(raw_path)
+raw
+
+#raw.plot()
+
+events = mne.find_events(raw)
+
+event_id = {
+    'auditory/left': 1,
+    'auditory/right': 2,
+    'visual/left': 3,
+    'visual/right': 4,
+    'face': 5,
+    'buttonpress': 32
+}
+event_id
+
+events
+
+len(events[events[:, 2] == 32])
+
+#Visual events
+len(events[events[:, 2] == 3]) + len(events[events[:, 2] == 4])
+
+raw.plot(events=events, event_id=event_id)
+
+raw.info
+
+raw.info['meas_date'] 
+
+raw.info['sfreq'] 
+
+raw.info['bads']
+
+raw.ch_names[:10]
+
+# raw.info['chs'][0]
+
+raw.plot_sensors(ch_type='eeg')
+
+raw.plot_sensors(kind='3d', ch_type='eeg')
