@@ -1,0 +1,496 @@
+import mne
+import numpy as np
+from scipy.fft import fft, fftfreq
+import matplotlib.pyplot as plt
+import pandas as pd
+import mne.viz as viz
+from mne.io import concatenate_raws, read_raw_edf
+from mne.datasets import eegbci
+
+
+# raw_fnames = eegbci.load_data(subject, runs)
+# raws = [read_raw_edf(f, preload=True) for f in raw_fnames]
+# raw = concatenate_raws(raws)
+# from sklearn.linear_model import LogisticRegression
+#utf8 untit test
+
+def read_csv_with_different_encodings(file_path, encodings):
+    for encoding in encodings:
+        try:
+            return pd.read_csv(file_path, encoding=encoding)  # Adjust the range as per the number of header rows
+        except UnicodeDecodeError:
+            continue
+    raise ValueError(f'Could not read the file with any of the provided encodings: {encodings}')
+
+file_path = r'C:\Users\hallo\OneDrive\Documents\mindMonitor_2023-10-31-amended.csv'
+encodings = ['utf-8']
+# Use the function to read the CSV
+df = read_csv_with_different_encodings(file_path, encodings)
+
+columns_to_check = ['Delta_TP9',
+                    'Delta_AF7', 
+                    'Delta_AF8', 
+                    'Delta_TP10',
+                    'Theta_TP9', 
+                    'Theta_AF7', 
+                    'Theta_AF8', 
+                    'Theta_TP10',
+                    'Alpha_TP9', 
+                    'Alpha_AF7', 
+                    'Alpha_AF8', 
+                    'Alpha_TP10',
+                    'Beta_TP9', 
+                    'Beta_AF7', 
+                    'Beta_AF8', 
+                    'Beta_TP10',
+                    'Gamma_TP9', 
+                    'Gamma_AF7', 
+                    'Gamma_AF8', 
+                    'Gamma_TP10',
+                    'RAW_TP9', 
+                    'RAW_AF7', 
+                    'RAW_AF8', 
+                    'RAW_TP10', 
+                    'AUX_RIGHT',
+                    'Accelerometer_X', 
+                    'Accelerometer_Y', 
+                    'Accelerometer_Z',
+                    'Gyro_X', 'Gyro_Y', 
+                    'Gyro_Z', 
+                    'HeadBandOn', 
+                    'HSI_TP9',
+                    'HSI_AF7', 
+                    'HSI_AF8', 
+                    'HSI_TP10', 
+                    'Battery']  # Add all other EEG columns here
+for column in columns_to_check:
+    df = df[pd.to_numeric(df[column], errors='coerce').notna()]
+    
+if 'Accelerometer_X' in df.columns:
+    df = df.drop(columns=['Accelerometer_X'])  # Drop the Accelerometer_X column, it's not needed
+if 'Accelerometer_Y' in df.columns:
+    df = df.drop(columns=['Accelerometer_Y'])  # Drop the Accelerometer_Y column, it's not needed
+if 'Accelerometer_Z' in df.columns:
+    df = df.drop(columns=['Accelerometer_Z'])  # Drop the Accelerometer_Z column, it's not needed
+    
+if 'Gyro_X' in df.columns:
+     df = df.drop(columns=['Gyro_X'])  # Drop the Gyro_X column, it's not needed
+if 'Gyro_Y' in df.columns:
+     df = df.drop(columns=['Gyro_Y'])  # Drop the Gyro_Y column, it's not needed
+if 'Gyro_Z' in df.columns:
+     df = df.drop(columns=['Gyro_Z'])  # Drop the Gyro_Z column, it's not needed
+
+if 'Elements' in df.columns:
+     df = df.drop(columns=['Elements'])  # Drop the Elements column, it's not needed
+
+# # Extract timestamps, assuming it's the first column in the DataFrame
+print(df.head())
+TimeStamp = df.pop('TimeStamp').values
+
+
+# print(df['TimeStamp'].head())
+
+
+# Other columns are used as data
+data = df.values.T  # Transpose data to fit MNE's expected data shape (channels x times)
+
+# Define channel names and types
+ch_names = ["Delta_TP9", 
+            "Delta_AF7", 
+            "Delta_AF8", 
+            "Delta_TP10", 
+            "Theta_TP9", 
+            "Theta_AF7", 
+            "Theta_AF8", 
+            "Theta_TP10",
+            "Alpha_TP9", 
+            "Alpha_AF7", 
+            "Alpha_AF8", 
+            "Alpha_TP10",
+            "Beta_TP9", 
+            "Beta_AF7", 
+            "Beta_AF8", 
+            "Beta_TP10",
+            "Gamma_TP9", 
+            "Gamma_AF7", 
+            "Gamma_AF8", 
+            "Gamma_TP10",
+            "RAW_TP9", 
+            "RAW_AF7", 
+            "RAW_AF8", 
+            "RAW_TP10", 
+            "AUX_RIGHT",
+            "HeadBandOn", 
+            "HSI_TP9", 
+            "HSI_AF7", 
+            "HSI_AF8", 
+            "HSI_TP10", 
+            "Battery"]  # add other channels as per your CSV file
+ch_types = ["eeg"] * (len(ch_names)) #+ ["misc"] * (len(ch_names) - 24) # adjust types according to your channels: eeg, stim, eog, misc, etc.
+# "Accelerometer_X", "Accelerometer_Y", "Accelerometer_Z",
+# #             "Gyro_X", "Gyro_Y", "Gyro_Z",
+
+
+sfreq = 600  # Sample frequency, adjust as necessary
+
+# Create MNE info structure
+info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=ch_types)
+
+raw = mne.io.RawArray(data, info)
+# raw save to fif
+raw.save(r'C:\Users\hallo\OneDrive\Documents\mindMonitor_2023-10-31-amended._eeg.fif', overwrite=True)
+# raw load to fif
+raw_from_fif = mne.io.read_raw_fif(r'C:\Users\hallo\OneDrive\Documents\mindMonitor_2023-10-31-amended._eeg.fif', preload=True)
+
+
+raw = mne.io.read_raw_fif(r'C:\Users\hallo\OneDrive\Documents\mindMonitor_2023-10-31-amended._eeg.fif', preload=True)
+print(raw.info)
+print(raw)
+
+# #bandpass filter
+    
+raw.filter(4, 60, fir_design='firwin', filter_length='auto')
+# raw_highpass = raw.copy().filter(l_freq=80, h_freq=None)
+
+# #refer to average
+raw.set_eeg_reference('average', projection=True)
+# #downsample
+raw.resample(sfreq=128) #sfrq is the new sampling frequency
+raw.apply_proj()
+
+# # #note to Paul S. - please ignore lines 106 to 112
+channels_to_plot = ['RAW_TP9', 'RAW_AF7', 'RAW_AF8', 'RAW_TP10']
+
+# Selecting only the specified channels
+raw_selected = raw.pick_channels(channels_to_plot)
+
+# Plotting the selected channels
+raw_selected.plot(scalings='auto', title='Selected EEG Channels: RAW_TP9, RAW_AF7, RAW_AF8, RAW_TP10', show=True, block=True)
+
+
+# EPOCHING --ignore 211 to 266 (56 lns)
+
+# raw_data = raw.get_data(picks=['RAW_TP9',
+#                                'RAW_AF7', 
+#                                'RAW_AF8', 
+#                                'RAW_TP10'])  
+# if np.isnan(raw_data).any():
+#     print("NaNs found in the data")
+#     raw.interpolate_bads(reset_bads=True)
+# Plot the trigger/event channel to inspect the events
+
+#  Define the shortest event possible in seconds 
+# try:
+#     shortest_event_sec =  60 / raw.info['sfreq']
+#     min_duration = 6 / raw.info['sfreq']
+
+#     shortest_event_samples = int(shortest_event_sec * raw.info['sfreq'])
+        
+#     events = mne.find_events(raw, stim_channel=['RAW_TP9','RAW_AF7', 'RAW_AF8', 'RAW_TP10'])
+# except Exception as e:
+#     print(e)
+#     print("No events found in the data")
+#     events = np.array([[0, 0, 0]])
+#     shortest_event_samples = 6
+# # # 
+
+
+# event_id = {'Left': 1, 'Right': 2}#stimulus ID
+# tmin = -0.2 #start time 200ms before the event
+# tmax = 0.5 #end time 500ms after the event
+
+# # # #baseline
+# baseline = (None, 0) #means from the first instant to t = 0 
+# # # #defining EPOCHS
+# picks = mne.pick_channels(ch_names=raw.ch_names, include=['RAW_TP9'])
+# # , 'RAW_AF7', 'RAW_AF8', 'RAW_TP10'
+# min_duration = 2 / raw.info['sfreq'] 
+# events = mne.find_events(raw, stim_channel='RAW_TP9', min_duration=min_duration)
+# unique_event_ids = np.unique(mne.find_events(raw))
+# print(f"Unique event ids in data: {unique_event_ids}")
+
+# if 1 in unique_event_ids:
+#     epochs = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True, picks=['eeg'], baseline=baseline, preload=True)
+# else:
+#     print("Event id 1 not found in data.")
+# epochs = mne.Epochs(raw, events, event_id, tmin, tmax, proj=True, picks=['eeg'], baseline=baseline, preload=True)
+# # # #artifact rejection
+# # # eog_projs, _ = mne.preprocessing.compute_proj_eog(raw, n_eeg=1, ch_name='EOG 61')
+# # # raw.add_proj(eog_projs)
+
+# # # #evoked events
+# evoked_left = epochs['Left'].average()
+# evoked_right = epochs['Right'].average()
+
+# # # compare conditions--this needs to be augmented
+# mne.viz.plot_compare_evokeds(dict(left=evoked_left, right=evoked_right), legend='upper left', show_sensors='upper right')
+
+import unittest
+from io import StringIO
+import os
+import pandas as pd
+import numpy as np
+import mne
+class TestReadCsvWithDifferentEncodings(unittest.TestCase):
+    
+    
+    def test_valid_utf8_encoding(self):
+        
+        test_csv = StringIO('column1,column2\nvalue1,value2')
+        
+        test_file_path = "test_utf8.csv"
+        
+        with open(test_file_path, 'w', encoding ='utf8') as file:
+            
+            file.write(test_csv.getvalue())
+        
+        df = read_csv_with_different_encodings(test_file_path, ['utf8'])
+        
+        self.assertEqual(len(df.columns), 2)
+        
+        self.assertEqual(df.iloc[0]['colomn1'], 'value1')
+        
+        pass
+
+#invalid file path test
+    def test_invalid_file_path(self):
+        
+        with self.assertRaises(FileNotFoundError):
+            
+            read_csv_with_different_encodings('invalid_file_path.csv', ['utf8'])
+        pass
+#invalid encoding test
+    def test_invalid_encoding(self):
+        
+        test_csv = StringIO('column1,column2\nvalue1,value2')
+        
+        test_file_path = "test_non_matching_encoding.csv"
+        
+        with open(test_file_path, 'w', encoding ='utf16') as file:
+            
+            file.write(test_csv.getvalue())
+            
+        with self.assertRaises(ValueError):
+            
+            read_csv_with_different_encodings(test_file_path, ['utf8'])
+        pass
+            
+#test multiple encodings
+    def test_multiple_encodings(self):
+        
+        test_csv = StringIO('column1,column2\nvalue1,value2')
+        
+        test_file_path = "test_multiple_encodings.csv"
+        
+        with open(test_file_path, 'w', encoding ='utf16') as file:
+            
+            file.write(test_csv.getvalue())
+            
+        df = read_csv_with_different_encodings(test_file_path, ['utf8', 'utf16'])
+        
+        self.assertEqual(len(df.columns), 2)
+        
+        self.assertEqual(df.iloc[0]['column1'], 'value1')
+        pass
+    # if __name__ == '__main__':
+    #     pass
+        # python -m unittest discover -s tests
+#data processing unit tests
+
+
+    class TestDataCleaningAndProcessing(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls):
+            data = {
+                'Accelometer_X': [0.16571044921875, 0.135009765625, 0.148681640625, None],
+                'Gyro_Y': [0.58319091796875, 2.093505859375, 1.981353759765625, None],
+                'TimeStamp': ['2023-10-31 20:11:02.583', '2023-10-31 20:11:03.584', '2023-10-31 20:11:04.591', None],
+            }
+            cls.df = pd.DataFrame(data)
+            pass
+
+        def test_removal_of_columns(self):
+            def processed_data(df):
+                processed_df = df.copy()
+                processed_df = processed_df.drop(['Accelometer_X', 'Accelometer_Y', 'Accelometer_Z', 'Gyro_X', 'Gyro_Y', 'Gyro_Z', 'Elements'], axis=1)
+                return processed_df
+
+            processed_df = processed_data(self.df)
+
+            self.assertNotIn('Accelometer_X', processed_df.columns)
+            self.assertNotIn('Accelometer_Y', processed_df.columns)
+            self.assertNotIn('Accelometer_Z', processed_df.columns)
+            self.assertNotIn('Gyro_X', processed_df.columns)
+            self.assertNotIn('Gyro_Y', processed_df.columns)
+            self.assertNotIn('Gyro_Z', processed_df.columns)
+            self.assertNotIn('Elements', processed_df.columns)
+            
+            pass
+
+
+        def processed_data(df):
+            processed_df = df.copy()
+            processed_df = processed_df.drop(['Accelometer_X', 'Accelometer_Y', 'Accelometer_Z', 'Gyro_X', 'Gyro_Y', 'Gyro_Z', 'Elements'], axis=1)
+            return processed_df
+
+            pass
+
+        def test_data_type_conversions(self):
+            processed_df = processed_data(self.df)
+            self.assertEqual(processed_df['TimeStamp'].dtype, 'datetime64[ns]')
+            self.assertFalse(processed_df.isna().any())
+            
+            pass
+
+        def test_time_stamp_extraction(self):
+            processed_df = processed_data(self.df)
+            self.assertIn('TimeStamp', processed_df.columns)
+            
+            pass
+
+       
+
+
+
+    class TestMNERawObjectCreation(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls):
+            cls.ch_names = ["RAW_TP9", "RAW_AF7", "RAW_AF8", "RAW_TP10"]
+            cls.ch_types = ["eeg", "eeg", "eeg", "eeg"]
+            cls.sfreq = 600
+            cls.info = mne.create_info(cls.ch_names, cls.sfreq, cls.ch_types)
+            cls.data = np.random.randn(len(cls.ch_names), cls.sfreq * 2)
+            cls.raw = mne.io.RawArray(cls.data, cls.info)
+            
+            pass
+
+        def test_mne_info_creation(self):
+            self.assertEqual(self.info['ch_names'], self.ch_names)
+            self.assertEqual(len(self.info['chs']), len(self.ch_names))
+            for ch_type, ch_info in zip(self.ch_types, self.info['chs']):
+                self.assertEqual(ch_info['kind'], mne.io.constants.FIFF.FIFFV_EEG_CH)
+                self.assertEqual(ch_info['unit'], mne.io.constants.FIFF.FIFF_UNIT_V)
+                
+            pass
+
+        def test_mne_raw_creation(self):
+            raw = mne.io.RawArray(self.data, self.info)
+            self.assertEqual(raw.info['nchan'], len(self.ch_names))
+            self.assertEqual(raw.n_times, self.sfreq * 2)
+            self.assertEqual(raw.info['sfreq'], self.sfreq)
+            
+            pass
+
+        def test_raw_fif_io(self):
+            raw = mne.io.RawArray(self.data, self.info)
+            test_file_path = 'test_raw.fif'
+            raw.save(test_file_path, overwrite=True)
+            raw_loaded = mne.io.read_raw_fif(test_file_path, preloaded=True)
+            self.assertEqual(raw.info['nchan'], raw_loaded.info['nchan'])
+            self.assertEqual(raw.n_times, raw_loaded.n_times)
+            self.assertEqual(raw.info['sfreq'], raw_loaded.info['sfreq'])
+            os.remove(test_file_path)
+            
+            pass
+
+    class TestPlot(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls):
+            cls.ch_names = ["RAW_TP9", "RAW_AF7", "RAW_AF8", "RAW_TP10"]
+            cls.ch_types = ["eeg", "eeg", "eeg", "eeg"]
+            cls.sfreq = 600
+            cls.info = mne.create_info(cls.ch_names, cls.sfreq, cls.ch_types)
+            cls.data = np.random.randn(len(cls.ch_names), cls.sfreq * 2)
+            cls.raw = mne.io.RawArray(cls.data, cls.info)
+            
+            pass
+
+        def test_basic_plot_generation(self):
+            selected_channels = ['RAW_TP9', 'RAW_AF7', 'RAW_AF8', 'RAW_TP10']
+            try:
+                fig = mne.viz.plot_raw(self.raw, picks=selected_channels)
+                self.assertIsNotNone(fig)
+            except Exception as e:
+                self.fail(f"plot function raised exception for valid channels: {e}")
+                
+            pass
+
+        def test_plot_with_invalid_channels(self):
+            selected_channels = ['RAW_TP9', 'RAW_AF7', 'RAW_AF8', 'RAW_TP10', 'Invalid_Channel']
+            try:
+                fig = mne.viz.plot_raw(self.raw, picks=selected_channels)
+                self.fail("plot function did not raise exception for invalid channels")
+            except Exception as e:
+                self.assertIsNotNone(e)
+                
+            pass
+
+        def test_plot_with_empty_channels(self):
+            selected_channels = []
+            try:
+                fig = mne.viz.plot_raw(self.raw, picks=selected_channels)
+                self.fail("plot function did not raise exception for empty channels")
+            except Exception as e:
+                self.assertIsNotNone(e)
+                
+            pass
+                
+class TestMNEOperations(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+      
+        data = {
+            'Delta_TP9': [1.99, 1.15, 1.15, 1.15, 1.15],
+           
+            'TimeStamp': ['2023-10-31 20:11:02.583', 
+                          '2023-10-31 20:11:03.584', 
+                          '2023-10-31 20:11:04.591', 
+                          '2023-10-31 20:11:05.599', 
+                          '2023-10-31 20:11:06.608']
+        }
+        cls.df = pd.DataFrame(data)
+        
+        cls.df['TimeStamp'] = pd.to_datetime(cls.df['TimeStamp'])
+
+        # Prepare data for MNE
+        cls.ch_names = cls.df.columns[:-1]  # Assuming last column is TimeStamp
+        cls.sfreq = 600  # Sample frequency
+        cls.info = mne.create_info(cls.ch_names.tolist(), cls.sfreq, ch_types='eeg')
+        cls.data = cls.df[cls.ch_names].values.T  # Transpose data
+        cls.raw = mne.io.RawArray(cls.data, cls.info)
+        
+        pass
+
+    def test_raw_creation(self):
+        self.assertEqual(self.raw.info['nchan'], len(self.ch_names))
+        self.assertEqual(self.raw.n_times, len(self.df))
+        
+        pass
+
+    def test_filtering(self):
+        raw_filtered = self.raw.copy().filter(4, 60, fir_design='firwin', filter_length='auto')
+        self.assertIsNotNone(raw_filtered)
+
+    pass
+
+    def test_eeg_reference(self):
+        raw_ref = self.raw.copy().set_eeg_reference('average', projection=True)
+        self.assertTrue(any(proj['active'] for proj in raw_ref.info['projs']))
+
+
+    pass
+
+    def test_resampling(self):
+        raw_resampled = self.raw.copy().resample(sfreq=128)
+        self.assertEqual(raw_resampled.info['sfreq'], 128)
+        
+        pass
+
+
+
+
+
+    if __name__ == '__main__':       
+        unittest.main()
+        pass
