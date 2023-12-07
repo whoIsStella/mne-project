@@ -1,4 +1,4 @@
-# mne-shit
+# mne-project
 
 mindMonitor_2023-10-31--20-11-02_4625240158191494507.zip
 This raw data was collected on Halloween the day after pre- Halloween activities. I was sleep deprived because of these activities and I had also just gotten off of work, ( 11am - 7pm ). Throuout the day I had injested around 600-650mg of caffiene to get me through work. I was also in a state of stress. I chose this day because I knew that theses factors would invoke a response in my EEG reading when weraing the MUSE headset. I figured that it was possible to pick up some small epileptic activity with theses factors present.
