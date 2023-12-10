@@ -1,25 +1,21 @@
-# mne-project
+Diving into the depths of neuroscientific data analysis can often feel like venturing into a Halloween haunted house – full of surprises and unpredictable twists. Such was the case on October 31, 2023, as I embarked on a personal experiment that extended beyond the realms of candy and costumes. I decided to use myself as a test subject to explore the intricate workings of my brain under certain conditions, using the MUSE headset to collect EEG data. The day was carefully chosen; the aftermath of the pre-Halloween festivities had left me sleep-deprived, and my work schedule (a shift from 11 am to 7 pm) only compounded my fatigue.
 
-mindMonitor_2023-10-31--20-11-02_4625240158191494507.zip
-This raw data was collected on Halloween the day after pre- Halloween activities. I was sleep deprived because of these activities and I had also just gotten off of work, ( 11am - 7pm ). Throuout the day I had injested around 600-650mg of caffiene to get me through work. I was also in a state of stress. I chose this day because I knew that theses factors would invoke a response in my EEG reading when weraing the MUSE headset. I figured that it was possible to pick up some small epileptic activity with theses factors present.
+I decided to analyze how my tired mind would react to a hefty dose of caffeine, around 600-650 mg, which I had consumed to push through my workday. Coupled with the stress that naturally accompanied such a hectic schedule, I was curious to see how these factors would manifest in my EEG readings. I had a hunch that the day's circumstances might even induce some minor epileptic activity detectable by the sensitive electrodes of the MUSE headset.
 
-mindMonitor_2023-10-31-updated.csv
-I kept getting errors in MNE so I figured that it was my data. 
-Because I am using the mind equvelent of a FitBit, there was a lot of noise contaminating my data. I tried to clean it using SQL
-but I did not have the patience for the SQL enviournment in VS Code and I did not have time to download SSMS. I have it on another computer but it's at another apartment. My partner did have SSMS on his computer so I sent him the file.
+After the data collection, the file `mindMonitor_2023-10-31--20-11-02_4625240158191494507.zip` became the raw representation of my brain's electrical symphony – or cacophony, as it were. However, when I attempted to refine this data, I encountered a series of obstacles that would challenge my analytical resolve.
 
-mindMonitor_2023-10-31-amended.csv
-I found a better way of getting rid of NANs and cleaning my data using sklearn.impute, SimpleImputer
-(data cleanup file)
-I wanted my data to be even cleaner so I used sklearn to get rid of NANs and other values that shouldn't be there.
+The first hurdle appeared when errors kept cropping up in MNE, a software for visualizing and analyzing electrophysiological data. I realized that the root of these issues lay in the quality of my data. Since the MUSE headset is essentially the mind's equivalent of a FitBit, there was a significant amount of 'noise' – extraneous data that could distort my results. My initial attempt to cleanse the data involved SQL in the Visual Studio Code environment. Unfortunately, my patience wore thin with the cumbersome process, and the lack of time made downloading SQL Server Management Studio (SSMS) on my current setup an impractical option.
 
-MNEControlcomparison
-This was a library of super sqeeky clean M/EEG data retrieved from a controlled enviournment. This particular dataset from this library contains small events.
+Salvation came in the form of my partner's computer, which had SSMS already installed. With a quick file transfer, I hoped to utilize their system to decontaminate my data. This collaborative effort resulted in `mindMonitor_2023-10-31-updated.csv`, a marginally less noisy version of my initial data.
 
-data cleanup
-This file as seen above cleaned mindMonitor_2023-10-31-updated.csv
+Yet, perfectionism drove me to seek out even more refined methods of data cleanup. I stumbled upon the `sklearn.impute` with its `SimpleImputer` functionality. This technique provided a more elegant solution to eliminate the NaNs and other erroneous values that plagued my dataset. The result was `mindMonitor_2023-10-31-amended.csv` – a testament to the power of machine learning in data preprocessing.
 
-main file 
-Reading csv, converting to fif, setting bandpass filter, visualizing data & unit tests. This file uses data that I have collected from my own brain.
-I am comparing the plotting output of my main file and the MNEControlcomparison file. When my data was plotted, there did seem to be a spike in activity. It was an interesting comparrison with the control data.
-To execute the unit tests use python -m unittest -v big_ol_python_project.py
+To contrast my data with a benchmark of clarity, I turned to `MNEControlcomparison`, a library of pristine M/EEG data from a controlled environment. This repository contained records of small events that served as a gold standard for what clean data should resemble. I was keen to compare the squeaky-clean datasets from this library with my own recordings – to see how my environmental and physical conditions might have influenced my brain's electrical activity.
+
+The process was meticulous: I read the CSV files, converted them into the .fif format preferred by MNE, set the appropriate bandpass filters, and visualized the data. The culmination of these steps was laid out in the `main file`, which also included a series of unit tests to ensure the integrity of my analysis.
+
+When the time came to compare the plotting outputs between my data and the control, the results were as compelling as they were revealing. There was indeed a spike in activity in my readings, which stood out starkly against the control data. This comparison was not just a validation of my initial hypothesis but also an intriguing insight into how stress, sleep deprivation, and caffeine could influence the electrical dance of the human brain.
+
+To delve into the technical rigor, I had employed a Python-based approach for the unit tests. The command `python -m unittest -v big_ol_python_project.py` would initiate a verbose output, detailing the successes and failures of each test, thereby holding my analytical process to a high standard of accuracy.
+
+The journey through this personal project was not just an academic endeavor; it was a personal quest to understand the whispers and roars of the cerebral cortex under less-than-ordinary circumstances. It highlighted the nuances of data analysis in the field of neuroscience, the importance of clean data, and the potential of modern tools to unveil the hidden stories our brains tell every moment of our lives.
