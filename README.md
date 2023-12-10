@@ -21,4 +21,5 @@ This file as seen above cleaned mindMonitor_2023-10-31-updated.csv
 
 main file 
 Reading csv, converting to fif, setting bandpass filter, visualizing data & unit tests. This file uses data that I have collected from my own brain.
-I am comparing the plotting output of my main file and the MNEControlcomparison file. 
+I am comparing the plotting output of my main file and the MNEControlcomparison file. When my data was plotted, there did seem to be a spike in activity. It was an interesting comparrison with the control data.
+To execute the unit tests use python -m unittest -v big_ol_python_project.py
